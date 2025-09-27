@@ -7,7 +7,7 @@ Nous concevons une infrastructure à trois serveurs pour héberger www.foobar.co
   Distribue le trafic entrant entre plusieurs serveurs.
 - **2 Serveurs Applicatifs** (chacun contenant : serveur web Nginx, serveur d’application, base de code, base de données MySQL)
 
-**Diagramme (texte) :**
+# Diagramme :
 ```
 Utilisateur
    |
