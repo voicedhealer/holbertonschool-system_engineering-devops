@@ -1,0 +1,79 @@
+# Infrastructure Web Distribuée – Conception et Explications
+
+## Vue d'ensemble de l'infrastructure
+
+Nous concevons une infrastructure à trois serveurs pour héberger www.foobar.com, avec les composants suivants :
+- **1 Équilibreur de charge (Load Balancer) HAProxy**  
+  Distribue le trafic entrant entre plusieurs serveurs.
+- **2 Serveurs Applicatifs** (chacun contenant : serveur web Nginx, serveur d’application, base de code, base de données MySQL)
+
+**Diagramme (texte) :**
+```
+Utilisateur
+   |
+   v
+www.foobar.com (DNS → IP)
+   |
+   v
+[Équilibreur de charge : HAProxy]
+   |          |
+   |          |
+  [v]        [v]
+[Serveur 1] [Serveur 2]
+  (Nginx)    (Nginx)
+  (App)      (App)
+  (MySQL)    (MySQL)
+```
+
+***
+
+## Pourquoi ajouter chaque élément ?
+
+- **Équilibreur de charge :**  
+  - Distribue les requêtes entre serveurs, améliore la fiabilité et la scalabilité.  
+  - Évite la surcharge d’un serveur unique et permet la continuité du service lors de la panne d’un serveur applicatif.
+- **Deux serveurs applicatifs :**  
+  - Offre de la redondance ; si un serveur tombe, l’autre assure la disponibilité du site.  
+  - Permet de servir plus d’utilisateurs simultanés (meilleure scalabilité).
+
+## Algorithmes et modes de l’équilibreur de charge
+
+- **Algorithmes :**  
+  - Peut utiliser Round Robin (envoie chaque requête au serveur suivant), nombre minimum de connexions, ou basé sur la source client.  
+  - Exemple : *Round Robin* assure une distribution simple et équitable.
+
+- **Active-Active vs Active-Passive :**  
+  - *Active-Active* : les deux serveurs traitent simultanément le trafic (améliore performances et utilisation des ressources, nécessite synchronisation robuste).  
+  - *Active-Passive* : un serveur traite tout le trafic tandis que l’autre est en veille, prêt à prendre le relais en cas de panne (plus simple mais moins efficace en ressource).  
+  - HAProxy supporte les deux modes, mais Active-Active est courant pour la scalabilité web.
+
+## Cluster Base de données – Primary-Replica (Master-Slave)
+
+- **Fonctionnement :**  
+  - Un nœud est *Primary/Master* : traitement des écritures.  
+  - Un ou plusieurs nœuds sont *Replicas/Slaves* : copies en lecture seule du Primary.  
+  - La réplication maintient les données synchronisées, seul le Primary accepte les modifications.
+
+- **Différence entre nœuds primaire et de réplica côté application :**  
+  - Les écritures vont toujours au Primary.  
+  - Les lectures peuvent être dirigées soit vers le Primary ou les Réplicas, équilibrant la charge sur les lectures.
+
+## Problèmes de l’infrastructure
+
+- **SPOF (Point unique de défaillance) :**  
+  - Si l’équilibreur de charge échoue, le service entier est inaccessible.
+- **Problèmes de sécurité :**  
+  - Absence de pare-feu ou HTTPS exposent le système à des attaques et écoutes.
+- **Pas de monitoring :**  
+  - Sans surveillance, les pannes ou ralentissements sont difficiles à détecter rapidement.
+
+***
+
+## Glossaire
+
+- **Équilibreur de charge (HAProxy) :**  
+  Logiciel répartissant le trafic entre plusieurs serveurs backend.
+- **Active-Active / Active-Passive :**  
+  Modes de répartition du travail et de basculement en environnement multi-serveurs.
+- **Primary-Replica (Master-Slave) :**  
+  Architecture de base de données pour haute disponibilité et montée en charge des lectures.
